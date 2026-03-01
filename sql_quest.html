@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Quest — Ankita's Career Launchpad</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0E1A;
+    --surface: #111827;
+    --card: #1A2235;
+    --accent: #00F5C3;
+    --accent2: #FF6B6B;
+    --accent3: #FFD166;
+    --accent4: #A78BFA;
+    --text: #E8EDF5;
+    --muted: #6B7A9A;
+    --border: #243046;
+    --success: #10B981;
+    --error: #EF4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(0,245,195,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(255,107,107,0.04) 0%, transparent 40%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* HEADER */
+  .header {
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    position: relative; z-index: 10;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent4));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .logo-text { font-size: 22px; font-weight: 800; color: var(--text); }
+  .logo-sub { font-size: 11px; color: var(--accent); letter-spacing: 2px; font-family: 'Space Mono'; }
+
+  .xp-bar-container { display: flex; align-items: center; gap: 16px; }
+  .xp-info { text-align: right; }
+  .xp-label { font-size: 11px; color: var(--muted); font-family: 'Space Mono'; letter-spacing: 1px; }
+  .xp-value { font-size: 18px; font-weight: 700; color: var(--accent3); }
+  .level-badge {
+    background: linear-gradient(135deg, var(--accent3), #ff9f43);
+    border-radius: 8px; padding: 6px 14px;
+    font-size: 13px; font-weight: 700; color: #0A0E1A;
+  }
+  .streak-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--card); border: 1px solid var(--accent2);
+    border-radius: 8px; padding: 6px 12px;
+    font-size: 13px; font-weight: 700; color: var(--accent2);
+  }
+
+  /* MAIN LAYOUT */
+  .main { display: flex; gap: 24px; padding: 28px 40px; position: relative; z-index: 1; min-height: calc(100vh - 89px); }
+  .sidebar { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
+  .content { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  .card-title {
+    font-size: 12px; font-weight: 700; letter-spacing: 2px;
+    color: var(--accent); font-family: 'Space Mono';
+    margin-bottom: 14px; text-transform: uppercase;
+  }
+
+  /* CURRICULUM MAP */
+  .module-list { display: flex; flex-direction: column; gap: 8px; }
+  .module-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 10px;
+    cursor: pointer; transition: all 0.2s;
+    border: 1px solid transparent;
+    font-size: 13px;
+  }
+  .module-item:hover { background: rgba(0,245,195,0.06); border-color: var(--accent); }
+  .module-item.active { background: rgba(0,245,195,0.1); border-color: var(--accent); }
+  .module-item.locked { opacity: 0.4; cursor: not-allowed; }
+  .module-item.completed { opacity: 0.7; }
+  .module-num {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; font-family: 'Space Mono';
+    flex-shrink: 0;
+  }
+  .module-item.active .module-num { background: var(--accent); color: var(--bg); }
+  .module-item.completed .module-num { background: var(--success); color: white; }
+  .module-item.locked .module-num { background: var(--border); color: var(--muted); }
+  .module-item:not(.active):not(.completed):not(.locked) .module-num { background: var(--border); color: var(--text); }
+  .module-name { font-size: 13px; font-weight: 600; }
+  .module-xp { margin-left: auto; font-size: 11px; color: var(--accent3); font-family: 'Space Mono'; }
+
+  /* PROGRESS */
+  .progress-track { background: var(--border); border-radius: 100px; height: 8px; overflow: hidden; }
+  .progress-fill {
+    height: 100%; border-radius: 100px;
+    background: linear-gradient(90deg, var(--accent), var(--accent4));
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .progress-label { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .progress-text { font-size: 12px; color: var(--muted); }
+  .progress-pct { font-size: 12px; color: var(--accent); font-weight: 700; font-family: 'Space Mono'; }
+
+  /* LESSON AREA */
+  .lesson-header {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+    flex-wrap: wrap;
+  }
+  .lesson-tag {
+    display: inline-block; background: rgba(0,245,195,0.15);
+    color: var(--accent); border: 1px solid rgba(0,245,195,0.3);
+    border-radius: 6px; padding: 3px 10px; font-size: 11px;
+    font-family: 'Space Mono'; letter-spacing: 1px; margin-bottom: 8px;
+  }
+  .lesson-title { font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 6px; }
+  .lesson-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+  .xp-reward {
+    background: linear-gradient(135deg, rgba(255,209,102,0.15), rgba(255,159,67,0.1));
+    border: 1px solid rgba(255,209,102,0.3);
+    border-radius: 12px; padding: 12px 18px;
+    text-align: center; flex-shrink: 0;
+  }
+  .xp-reward-num { font-size: 28px; font-weight: 800; color: var(--accent3); }
+  .xp-reward-label { font-size: 10px; color: var(--muted); font-family: 'Space Mono'; letter-spacing: 1px; }
+
+  /* CONCEPT BOX */
+  .concept-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent4);
+    border-radius: 12px; padding: 18px 20px;
+  }
+  .concept-box h4 { font-size: 13px; color: var(--accent4); margin-bottom: 10px; font-family: 'Space Mono'; letter-spacing: 1px; }
+  .concept-box p { font-size: 14px; color: var(--text); line-height: 1.7; }
+
+  /* CAREER TIP */
+  .career-tip {
+    background: linear-gradient(135deg, rgba(167,139,250,0.1), rgba(0,245,195,0.05));
+    border: 1px solid rgba(167,139,250,0.3);
+    border-radius: 12px; padding: 14px 18px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .tip-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .tip-text { font-size: 13px; color: var(--text); line-height: 1.6; }
+  .tip-text strong { color: var(--accent4); }
+
+  /* QUERY CHALLENGE */
+  .challenge-area { display: flex; flex-direction: column; gap: 14px; }
+  .challenge-prompt {
+    background: var(--surface); border-radius: 12px;
+    padding: 16px 20px; border: 1px solid var(--border);
+  }
+  .challenge-prompt h4 { font-size: 13px; color: var(--accent2); margin-bottom: 8px; font-family: 'Space Mono'; }
+  .challenge-prompt p { font-size: 14px; line-height: 1.6; }
+  .challenge-prompt .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  /* TABLE PREVIEW */
+  .table-preview { overflow-x: auto; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; font-family: 'Space Mono'; }
+  .data-table th {
+    background: rgba(0,245,195,0.1); color: var(--accent);
+    padding: 8px 14px; text-align: left; border-bottom: 1px solid var(--border);
+    font-size: 11px; letter-spacing: 1px;
+  }
+  .data-table td { padding: 7px 14px; border-bottom: 1px solid rgba(36,48,70,0.6); color: var(--text); }
+  .data-table tr:hover td { background: rgba(0,245,195,0.03); }
+
+  /* CODE EDITOR */
+  .editor-wrapper { position: relative; }
+  .editor-label {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 8px; font-size: 12px; color: var(--muted);
+    font-family: 'Space Mono';
+  }
+  .editor-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .editor-dot.red { background: #FF5F56; }
+  .editor-dot.yellow { background: #FFBD2E; }
+  .editor-dot.green { background: #27C93F; }
+  textarea#sql-input {
+    width: 100%; min-height: 110px;
+    background: #0D1424; border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px;
+    color: #A8D8EA; font-family: 'Space Mono'; font-size: 14px;
+    resize: vertical; outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+  textarea#sql-input:focus { border-color: var(--accent); }
+  textarea#sql-input::placeholder { color: var(--muted); }
+
+  /* BUTTONS */
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    padding: 11px 22px; border-radius: 10px;
+    font-family: 'Syne'; font-size: 14px; font-weight: 700;
+    cursor: pointer; border: none; transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #00c9a7);
+    color: var(--bg);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,245,195,0.3); }
+  .btn-secondary {
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-hint {
+    background: rgba(255,209,102,0.1); color: var(--accent3);
+    border: 1px solid rgba(255,209,102,0.3);
+  }
+  .btn-hint:hover { background: rgba(255,209,102,0.2); }
+
+  /* RESULT PANEL */
+  .result-panel {
+    border-radius: 12px; padding: 16px 20px;
+    display: none;
+    animation: slideIn 0.3s ease;
+  }
+  .result-panel.success {
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.4);
+  }
+  .result-panel.error {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.4);
+  }
+  .result-panel.show { display: block; }
+  .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .result-icon { font-size: 20px; }
+  .result-title { font-size: 15px; font-weight: 700; }
+  .result-panel.success .result-title { color: var(--success); }
+  .result-panel.error .result-title { color: var(--error); }
+  .result-msg { font-size: 13px; line-height: 1.6; color: var(--muted); }
+  .result-panel.success .result-msg { color: var(--text); }
+  .xp-pop {
+    display: inline-block; background: var(--accent3); color: var(--bg);
+    border-radius: 6px; padding: 2px 8px; font-size: 12px;
+    font-weight: 700; font-family: 'Space Mono'; margin-left: 8px;
+    animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ANSWER REVEAL */
+  .answer-reveal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 16px; margin-top: 12px;
+    display: none; font-family: 'Space Mono'; font-size: 13px; color: #A8D8EA;
+    line-height: 1.6;
+  }
+  .answer-reveal.show { display: block; }
+
+  /* NAV BUTTONS */
+  .nav-row { display: flex; gap: 12px; justify-content: space-between; align-items: center; margin-top: 4px; }
+  .lesson-counter { font-size: 13px; color: var(--muted); font-family: 'Space Mono'; }
+
+  /* STATS SIDEBAR */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-item {
+    background: var(--surface); border-radius: 10px; padding: 12px;
+    border: 1px solid var(--border); text-align: center;
+  }
+  .stat-num { font-size: 22px; font-weight: 800; }
+  .stat-label { font-size: 10px; color: var(--muted); font-family: 'Space Mono'; margin-top: 2px; }
+  .stat-item:nth-child(1) .stat-num { color: var(--accent); }
+  .stat-item:nth-child(2) .stat-num { color: var(--accent3); }
+  .stat-item:nth-child(3) .stat-num { color: var(--accent2); }
+  .stat-item:nth-child(4) .stat-num { color: var(--accent4); }
+
+  /* ACHIEVEMENTS */
+  .achievements { display: flex; flex-wrap: wrap; gap: 8px; }
+  .achievement {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 10px; font-size: 12px;
+    transition: all 0.2s;
+  }
+  .achievement.earned { border-color: var(--accent3); color: var(--accent3); }
+  .achievement.locked { opacity: 0.4; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes confetti {
+    0% { transform: translateY(0) rotate(0); opacity: 1; }
+    100% { transform: translateY(-80px) rotate(720deg); opacity: 0; }
+  }
+
+  /* CONFETTI */
+  .confetti-piece {
+    position: fixed; width: 8px; height: 8px; pointer-events: none;
+    z-index: 1000; border-radius: 2px;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .main { flex-direction: column; padding: 16px 20px; }
+    .sidebar { width: 100%; }
+    .header { padding: 16px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div>
+      <div class="logo-text">SQL Quest</div>
+      <div class="logo-sub">ANKITA'S CAREER LAUNCHPAD</div>
+    </div>
+  </div>
+  <div class="xp-bar-container">
+    <div class="streak-badge"><span>🔥</span><span id="streak-count">1</span> day streak</div>
+    <div class="xp-info">
+      <div class="xp-label">TOTAL XP</div>
+      <div class="xp-value" id="total-xp">0</div>
+    </div>
+    <div class="level-badge" id="level-badge">Level 1</div>
+  </div>
+</header>
+
+<div class="main">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="card">
+      <div class="card-title">Your Progress</div>
+      <div class="progress-label">
+        <span class="progress-text">Overall mastery</span>
+        <span class="progress-pct" id="prog-pct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="prog-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Curriculum</div>
+      <div class="module-list" id="module-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Stats</div>
+      <div class="stats-grid">
+        <div class="stat-item"><div class="stat-num" id="stat-correct">0</div><div class="stat-label">CORRECT</div></div>
+        <div class="stat-item"><div class="stat-num" id="stat-lessons">0</div><div class="stat-label">LESSONS</div></div>
+        <div class="stat-item"><div class="stat-num" id="stat-accuracy">-</div><div class="stat-label">ACCURACY</div></div>
+        <div class="stat-item"><div class="stat-num" id="stat-xp-per">-</div><div class="stat-label">XP/LESSON</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Achievements</div>
+      <div class="achievements" id="achievements-list"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="content">
+    <div class="card" id="lesson-card">
+      <!-- Lesson content injected here -->
+    </div>
+  </main>
+</div>
+
+<script>
+const LESSONS = [
+  {
+    id: 0, module: 0,
+    tag: "MODULE 1 — FOUNDATIONS",
+    title: "What is SQL & Why It Will Get You Hired",
+    desc: "SQL (Structured Query Language) is the language databases speak. It's in 60%+ of data analyst job listings — including the ones you're applying to right now.",
+    concept: {
+      title: "THE SELECT STATEMENT",
+      body: `SELECT is how you ask a database for data. Think of it like asking Excel to show you specific columns.\n\n<code>SELECT column1, column2 FROM table_name;</code>\n\nOr grab EVERYTHING:\n<code>SELECT * FROM table_name;</code>`
+    },
+    tip: {
+      icon: "💼",
+      text: "<strong>Why Ankita needs this:</strong> IBM Austin, TikTok, and Visa all list SQL in their intern job descriptions. 2 weeks of practice = your resume gets past filters that currently screen you out."
+    },
+    table: {
+      name: "campaigns",
+      headers: ["campaign_id", "campaign_name", "channel", "budget"],
+      rows: [
+        [1, "Summer Launch", "Social Media", 5000],
+        [2, "Q4 Push", "Email", 3200],
+        [3, "Brand Awareness", "Display", 8000],
+        [4, "Retargeting", "Social Media", 2500],
+      ]
+    },
+    question: "You're a marketing analyst at Trident. Write a query to select ALL columns from the campaigns table.",
+    hint: "Use SELECT * to grab everything, then tell it FROM which table.",
+    answers: ["select * from campaigns", "select*from campaigns", "SELECT * FROM campaigns", "SELECT * FROM campaigns;"],
+    xp: 50,
+    successMsg: "Perfect first query! This is exactly what you'd write on day 1 at any of these companies.",
+  },
+  {
+    id: 1, module: 0,
+    tag: "MODULE 1 — FOUNDATIONS",
+    title: "Filtering Data with WHERE",
+    desc: "WHERE narrows down your results. Instead of seeing all 10,000 rows, you see only what matters.",
+    concept: {
+      title: "THE WHERE CLAUSE",
+      body: `Add WHERE after FROM to filter:\n<code>SELECT * FROM campaigns WHERE channel = 'Social Media';</code>\n\nOperators: = (equals), != (not equals), > < >= <=\nText values need single quotes. Numbers don't.`
+    },
+    tip: {
+      icon: "🎯",
+      text: "<strong>Real job task:</strong> At MK Solutions, you analyzed 'specific trends.' In SQL that means: SELECT * FROM sales WHERE region = 'Southwest' — that's WHERE in action."
+    },
+    table: {
+      name: "campaigns",
+      headers: ["campaign_id", "campaign_name", "channel", "budget"],
+      rows: [
+        [1, "Summer Launch", "Social Media", 5000],
+        [2, "Q4 Push", "Email", 3200],
+        [3, "Brand Awareness", "Display", 8000],
+        [4, "Retargeting", "Social Media", 2500],
+      ]
+    },
+    question: "Show only the campaigns that ran on Social Media. Select all columns.",
+    hint: "WHERE channel = ... (don't forget single quotes around text!)",
+    answers: ["select * from campaigns where channel = 'social media'", "select * from campaigns where channel='social media'", "SELECT * FROM campaigns WHERE channel = 'Social Media'", "SELECT * FROM campaigns WHERE channel='Social Media'"],
+    xp: 75,
+    successMsg: "WHERE clause mastered! You just wrote your first filtered query — exactly what IBM asks in analytics intern interviews.",
+  },
+  {
+    id: 2, module: 0,
+    tag: "MODULE 1 — FOUNDATIONS",
+    title: "Sorting with ORDER BY",
+    desc: "ORDER BY sorts your results. High to low, low to high — essential for ranking and reporting.",
+    concept: {
+      title: "ORDER BY",
+      body: `Sort ascending (low → high) by default:\n<code>SELECT * FROM campaigns ORDER BY budget;</code>\n\nSort descending (high → low):\n<code>SELECT * FROM campaigns ORDER BY budget DESC;</code>`
+    },
+    tip: {
+      icon: "📊",
+      text: "<strong>Power BI connection:</strong> When you sort a Power BI visual, SQL's ORDER BY is running underneath. You're already thinking in SQL — now you're just writing it."
+    },
+    table: {
+      name: "campaigns",
+      headers: ["campaign_id", "campaign_name", "channel", "budget"],
+      rows: [
+        [1, "Summer Launch", "Social Media", 5000],
+        [2, "Q4 Push", "Email", 3200],
+        [3, "Brand Awareness", "Display", 8000],
+        [4, "Retargeting", "Social Media", 2500],
+      ]
+    },
+    question: "Show all campaigns ordered by budget from highest to lowest.",
+    hint: "Use ORDER BY budget followed by DESC for descending order.",
+    answers: ["select * from campaigns order by budget desc", "SELECT * FROM campaigns ORDER BY budget DESC", "SELECT * FROM campaigns ORDER BY budget DESC;"],
+    xp: 75,
+    successMsg: "Sorting nailed! Now you can instantly find 'top performing campaigns' — a classic interview question.",
+  },
+  {
+    id: 3, module: 1,
+    tag: "MODULE 2 — AGGREGATIONS",
+    title: "COUNT, SUM, AVG — The Power Tools",
+    desc: "Aggregate functions crunch numbers across rows. This is where SQL starts becoming your superpower for analytics.",
+    concept: {
+      title: "AGGREGATE FUNCTIONS",
+      body: `COUNT: How many rows?\n<code>SELECT COUNT(*) FROM campaigns;</code>\n\nSUM: Add up a column:\n<code>SELECT SUM(budget) FROM campaigns;</code>\n\nAVG: Average value:\n<code>SELECT AVG(budget) FROM campaigns;</code>`
+    },
+    tip: {
+      icon: "🏢",
+      text: "<strong>Interview gold:</strong> 'What was the total marketing spend?' → SUM(budget). 'How many campaigns ran?' → COUNT(*). These are real questions at Visa, Whole Foods, and TikTok intern interviews."
+    },
+    table: {
+      name: "campaigns",
+      headers: ["campaign_id", "campaign_name", "channel", "budget"],
+      rows: [
+        [1, "Summer Launch", "Social Media", 5000],
+        [2, "Q4 Push", "Email", 3200],
+        [3, "Brand Awareness", "Display", 8000],
+        [4, "Retargeting", "Social Media", 2500],
+      ]
+    },
+    question: "What is the total budget spent across all campaigns? Return just the sum.",
+    hint: "SELECT SUM(column_name) FROM table_name",
+    answers: ["select sum(budget) from campaigns", "SELECT SUM(budget) FROM campaigns", "SELECT SUM(budget) FROM campaigns;"],
+    xp: 100,
+    successMsg: "SUM mastered! $18,700 total. Aggregate functions are the core of every analytics interview SQL question.",
+  },
+  {
+    id: 4, module: 1,
+    tag: "MODULE 2 — AGGREGATIONS",
+    title: "GROUP BY — Unlocking Breakdowns",
+    desc: "GROUP BY lets you aggregate by category — like total spend per channel. This is real analytics work.",
+    concept: {
+      title: "GROUP BY",
+      body: `Group and count/sum by a category:\n<code>SELECT channel, SUM(budget)\nFROM campaigns\nGROUP BY channel;</code>\n\nAlways: SELECT the column you're grouping by PLUS your aggregate function.`
+    },
+    tip: {
+      icon: "💡",
+      text: "<strong>This is dashboard thinking:</strong> Every time you broke down campaign performance by channel in Power BI, you were doing GROUP BY logic. Now you can write it from scratch."
+    },
+    table: {
+      name: "campaigns",
+      headers: ["campaign_id", "campaign_name", "channel", "budget"],
+      rows: [
+        [1, "Summer Launch", "Social Media", 5000],
+        [2, "Q4 Push", "Email", 3200],
+        [3, "Brand Awareness", "Display", 8000],
+        [4, "Retargeting", "Social Media", 2500],
+      ]
+    },
+    question: "Show the total budget for each channel. Return channel and total budget.",
+    hint: "SELECT channel, SUM(budget) FROM campaigns GROUP BY channel",
+    answers: ["select channel, sum(budget) from campaigns group by channel", "SELECT channel, SUM(budget) FROM campaigns GROUP BY channel", "SELECT channel, SUM(budget) FROM campaigns GROUP BY channel;"],
+    xp: 125,
+    successMsg: "GROUP BY unlocked! This single query is worth $10K in salary negotiation. Seriously.",
+  },
+  {
+    id: 5, module: 2,
+    tag: "MODULE 3 — JOINS",
+    title: "INNER JOIN — Combining Tables",
+    desc: "Real databases have multiple tables. JOINs connect them. This is what separates beginners from real analysts.",
+    concept: {
+      title: "INNER JOIN",
+      body: `INNER JOIN returns rows that match in BOTH tables:\n<code>SELECT campaigns.campaign_name, metrics.clicks\nFROM campaigns\nINNER JOIN metrics ON campaigns.campaign_id = metrics.campaign_id;</code>\n\nThe ON clause specifies which columns connect the tables.`
+    },
+    tip: {
+      icon: "🚀",
+      text: "<strong>Resume upgrade:</strong> Once you can write JOINs, add 'SQL (joins, aggregations, subqueries)' to your resume skills section. That phrase alone increases recruiter callbacks significantly."
+    },
+    table: {
+      name: "campaigns + metrics",
+      headers: ["campaign_id", "campaign_name", "clicks", "conversions"],
+      rows: [
+        [1, "Summer Launch", 8420, 312],
+        [2, "Q4 Push", 5200, 189],
+        [3, "Brand Awareness", 12500, 445],
+        [4, "Retargeting", 3800, 201],
+      ]
+    },
+    question: "Join campaigns and metrics tables to get campaign_name and clicks. Assume both have campaign_id.",
+    hint: "SELECT campaigns.campaign_name, metrics.clicks FROM campaigns INNER JOIN metrics ON ...",
+    answers: [
+      "select campaigns.campaign_name, metrics.clicks from campaigns inner join metrics on campaigns.campaign_id = metrics.campaign_id",
+      "SELECT campaigns.campaign_name, metrics.clicks FROM campaigns INNER JOIN metrics ON campaigns.campaign_id = metrics.campaign_id",
+      "SELECT campaigns.campaign_name, metrics.clicks FROM campaigns INNER JOIN metrics ON campaigns.campaign_id = metrics.campaign_id;"
+    ],
+    xp: 150,
+    successMsg: "YOU JUST WROTE A JOIN. This is a real SQL skill. Put it on your resume RIGHT NOW.",
+  },
+  {
+    id: 6, module: 2,
+    tag: "MODULE 3 — JOINS",
+    title: "The Full Analyst Query",
+    desc: "Combine everything: JOIN + WHERE + GROUP BY + ORDER BY. This is a real analyst interview query.",
+    concept: {
+      title: "FULL QUERY STRUCTURE",
+      body: `The order always goes:\nSELECT → FROM → JOIN → WHERE → GROUP BY → ORDER BY\n\n<code>SELECT channel, SUM(budget) AS total_budget\nFROM campaigns\nWHERE budget > 3000\nGROUP BY channel\nORDER BY total_budget DESC;</code>\n\nAS creates an alias — a cleaner column name in your output.`
+    },
+    tip: {
+      icon: "🏆",
+      text: "<strong>Interview ready:</strong> If you can write this query, you pass the SQL screening at 80% of Austin internships. Applied Materials, Visa, and TikTok all test exactly this complexity."
+    },
+    table: {
+      name: "campaigns",
+      headers: ["campaign_id", "campaign_name", "channel", "budget"],
+      rows: [
+        [1, "Summer Launch", "Social Media", 5000],
+        [2, "Q4 Push", "Email", 3200],
+        [3, "Brand Awareness", "Display", 8000],
+        [4, "Retargeting", "Social Media", 2500],
+      ]
+    },
+    question: "Show total budget per channel, but only for channels where budget > 3000. Order by total_budget highest first. Use an alias 'total_budget'.",
+    hint: "SELECT channel, SUM(budget) AS total_budget FROM campaigns WHERE budget > 3000 GROUP BY channel ORDER BY total_budget DESC",
+    answers: [
+      "select channel, sum(budget) as total_budget from campaigns where budget > 3000 group by channel order by total_budget desc",
+      "SELECT channel, SUM(budget) AS total_budget FROM campaigns WHERE budget > 3000 GROUP BY channel ORDER BY total_budget DESC",
+      "SELECT channel, SUM(budget) AS total_budget FROM campaigns WHERE budget > 3000 GROUP BY channel ORDER BY total_budget DESC;"
+    ],
+    xp: 200,
+    successMsg: "BOSS QUERY COMPLETE! 🎉 You just wrote a full professional SQL query. You are interview-ready.",
+  },
+];
+
+const MODULES = [
+  { name: "SQL Foundations", lessons: [0,1,2], emoji: "🔑" },
+  { name: "Aggregations & Groups", lessons: [3,4], emoji: "📊" },
+  { name: "Joins & Advanced", lessons: [5,6], emoji: "🔗" },
+];
+
+const ACHIEVEMENTS_DEF = [
+  { id: "first_query", emoji: "⚡", name: "First Query", condition: s => s.correct >= 1 },
+  { id: "hot_streak", emoji: "🔥", name: "Hot Streak", condition: s => s.correctInRow >= 3 },
+  { id: "module1", emoji: "🎓", name: "Module 1 Done", condition: s => s.completedLessons.has(0) && s.completedLessons.has(1) && s.completedLessons.has(2) },
+  { id: "boss_query", emoji: "🏆", name: "Boss Query", condition: s => s.completedLessons.has(6) },
+  { id: "xp100", emoji: "💰", name: "100 XP Club", condition: s => s.xp >= 100 },
+  { id: "analyst", emoji: "🧪", name: "Data Analyst", condition: s => s.xp >= 500 },
+];
+
+let state = {
+  currentLesson: 0,
+  xp: 0,
+  correct: 0,
+  attempts: 0,
+  correctInRow: 0,
+  completedLessons: new Set(),
+  hintsUsed: new Set(),
+  earnedAchievements: new Set(),
+};
+
+function getLevel(xp) {
+  if (xp < 100) return 1;
+  if (xp < 300) return 2;
+  if (xp < 600) return 3;
+  if (xp < 1000) return 4;
+  return 5;
+}
+
+function renderModuleList() {
+  const el = document.getElementById('module-list');
+  el.innerHTML = '';
+  MODULES.forEach((mod, mi) => {
+    const lessonsDone = mod.lessons.filter(l => state.completedLessons.has(l)).length;
+    const allPrevDone = mi === 0 || MODULES[mi-1].lessons.every(l => state.completedLessons.has(l));
+    mod.lessons.forEach(lid => {
+      const lesson = LESSONS[lid];
+      const done = state.completedLessons.has(lid);
+      const active = lid === state.currentLesson;
+      const locked = !allPrevDone && !done && lid !== state.currentLesson;
+      const cls = [done?'completed':'', active?'active':'', locked?'locked':''].filter(Boolean).join(' ');
+      el.innerHTML += `
+        <div class="module-item ${cls}" onclick="${locked ? '' : `goLesson(${lid})`}">
+          <div class="module-num">${done ? '✓' : lid+1}</div>
+          <div class="module-name">${lesson.title.length > 22 ? lesson.title.slice(0,22)+'…' : lesson.title}</div>
+          <div class="module-xp">+${lesson.xp}</div>
+        </div>`;
+    });
+  });
+}
+
+function renderLesson() {
+  const lesson = LESSONS[state.currentLesson];
+  const card = document.getElementById('lesson-card');
+  const tableRows = lesson.table.rows.map(r =>
+    `<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`
+  ).join('');
+
+  card.innerHTML = `
+    <div class="lesson-header">
+      <div>
+        <div class="lesson-tag">${lesson.tag}</div>
+        <div class="lesson-title">${lesson.title}</div>
+        <div class="lesson-desc">${lesson.desc}</div>
+      </div>
+      <div class="xp-reward">
+        <div class="xp-reward-num">+${lesson.xp}</div>
+        <div class="xp-reward-label">XP REWARD</div>
+      </div>
+    </div>
+
+    <div class="concept-box" style="margin-top:20px">
+      <h4>📖 CONCEPT: ${lesson.concept.title}</h4>
+      <p style="white-space:pre-line;font-family:Space Mono,monospace;font-size:13px">${lesson.concept.body}</p>
+    </div>
+
+    <div class="career-tip" style="margin-top:14px">
+      <div class="tip-icon">${lesson.tip.icon}</div>
+      <div class="tip-text">${lesson.tip.text}</div>
+    </div>
+
+    <div class="card-title" style="margin-top:22px;margin-bottom:12px">📋 DATA TABLE: ${lesson.table.name.toUpperCase()}</div>
+    <div class="table-preview">
+      <table class="data-table">
+        <thead><tr>${lesson.table.headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>
+
+    <div class="challenge-area" style="margin-top:20px">
+      <div class="challenge-prompt">
+        <h4>⚔️ CHALLENGE</h4>
+        <p>${lesson.question}</p>
+        <div class="hint">💭 Struggling? Click the Hint button below.</div>
+      </div>
+
+      <div class="editor-wrapper">
+        <div class="editor-label">
+          <div class="editor-dot red"></div>
+          <div class="editor-dot yellow"></div>
+          <div class="editor-dot green"></div>
+          <span style="margin-left:6px">Write your SQL query</span>
+        </div>
+        <textarea id="sql-input" placeholder="SELECT ... FROM ... WHERE ..."></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="checkAnswer()">▶ Run Query</button>
+        <button class="btn btn-hint" onclick="showHint()">💡 Hint (-10 XP)</button>
+        <button class="btn btn-secondary" onclick="showAnswer()">👁 Show Answer</button>
+      </div>
+
+      <div class="result-panel" id="result-panel">
+        <div class="result-header">
+          <span class="result-icon" id="result-icon"></span>
+          <span class="result-title" id="result-title"></span>
+        </div>
+        <div class="result-msg" id="result-msg"></div>
+      </div>
+
+      <div class="answer-reveal" id="answer-reveal">
+        ✅ Answer: ${lesson.answers[lesson.answers.length - 1]}
+      </div>
+    </div>
+
+    <div class="nav-row" style="margin-top:20px">
+      <button class="btn btn-secondary" onclick="prevLesson()" ${state.currentLesson === 0 ? 'disabled style="opacity:0.4"' : ''}>← Previous</button>
+      <span class="lesson-counter">Lesson ${state.currentLesson + 1} of ${LESSONS.length}</span>
+      <button class="btn btn-secondary" onclick="nextLesson()" ${state.currentLesson === LESSONS.length-1 ? 'disabled style="opacity:0.4"' : ''}>Next →</button>
+    </div>
+  `;
+
+  const ta = document.getElementById('sql-input');
+  ta.addEventListener('keydown', e => { if(e.key==='Enter' && e.ctrlKey) checkAnswer(); });
+}
+
+function checkAnswer() {
+  const lesson = LESSONS[state.currentLesson];
+  const input = document.getElementById('sql-input').value.trim().toLowerCase().replace(/\s+/g,' ').replace(/;$/,'');
+  const panel = document.getElementById('result-panel');
+  const correct = lesson.answers.some(a => a.toLowerCase().replace(/\s+/g,' ').replace(/;$/,'') === input);
+
+  state.attempts++;
+  panel.className = 'result-panel show';
+
+  if (correct) {
+    const alreadyDone = state.completedLessons.has(state.currentLesson);
+    const xpEarned = alreadyDone ? 0 : (state.hintsUsed.has(state.currentLesson) ? Math.floor(lesson.xp * 0.6) : lesson.xp);
+
+    if (!alreadyDone) {
+      state.xp += xpEarned;
+      state.correct++;
+      state.correctInRow++;
+      state.completedLessons.add(state.currentLesson);
+    }
+
+    panel.className = 'result-panel success show';
+    document.getElementById('result-icon').textContent = '🎉';
+    document.getElementById('result-title').innerHTML = `Correct! ${!alreadyDone ? `<span class="xp-pop">+${xpEarned} XP</span>` : ''}`;
+    document.getElementById('result-msg').textContent = lesson.successMsg;
+
+    if (!alreadyDone) {
+      spawnConfetti();
+      updateUI();
+      checkAchievements();
+
+      // Auto-advance after 2.5s
+      setTimeout(() => {
+        if (state.currentLesson < LESSONS.length - 1) nextLesson();
+      }, 2500);
+    }
+  } else {
+    state.correctInRow = 0;
+    panel.className = 'result-panel error show';
+    document.getElementById('result-icon').textContent = '❌';
+    document.getElementById('result-title').textContent = 'Not quite — try again!';
+    document.getElementById('result-msg').textContent = `Check: keywords (SELECT, FROM, WHERE...), spacing, single quotes around text values. Your query: "${document.getElementById('sql-input').value}"`;
+  }
+}
+
+function showHint() {
+  const lesson = LESSONS[state.currentLesson];
+  if (!state.hintsUsed.has(state.currentLesson)) {
+    state.hintsUsed.add(state.currentLesson);
+  }
+  alert(`💡 Hint:\n\n${lesson.hint}\n\nNote: Using hints reduces XP reward by 40%.`);
+}
+
+function showAnswer() {
+  const el = document.getElementById('answer-reveal');
+  el.className = 'answer-reveal show';
+}
+
+function nextLesson() {
+  if (state.currentLesson < LESSONS.length - 1) {
+    state.currentLesson++;
+    renderLesson();
+    renderModuleList();
+    window.scrollTo(0, 0);
+  }
+}
+
+function prevLesson() {
+  if (state.currentLesson > 0) {
+    state.currentLesson--;
+    renderLesson();
+    renderModuleList();
+    window.scrollTo(0, 0);
+  }
+}
+
+function goLesson(id) {
+  state.currentLesson = id;
+  renderLesson();
+  renderModuleList();
+  window.scrollTo(0, 0);
+}
+
+function updateUI() {
+  const total = LESSONS.length;
+  const done = state.completedLessons.size;
+  const pct = Math.round((done/total)*100);
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('total-xp').textContent = state.xp;
+  const lvl = getLevel(state.xp);
+  document.getElementById('level-badge').textContent = `Level ${lvl}`;
+  document.getElementById('stat-correct').textContent = state.correct;
+  document.getElementById('stat-lessons').textContent = state.completedLessons.size;
+  document.getElementById('stat-accuracy').textContent = state.attempts > 0 ? Math.round((state.correct/state.attempts)*100) + '%' : '-';
+  document.getElementById('stat-xp-per').textContent = state.completedLessons.size > 0 ? Math.round(state.xp/state.completedLessons.size) : '-';
+}
+
+function checkAchievements() {
+  const el = document.getElementById('achievements-list');
+  el.innerHTML = '';
+  ACHIEVEMENTS_DEF.forEach(a => {
+    const earned = a.condition(state);
+    if (earned && !state.earnedAchievements.has(a.id)) {
+      state.earnedAchievements.add(a.id);
+    }
+    el.innerHTML += `<div class="achievement ${earned ? 'earned' : 'locked'}">${a.emoji} ${a.name}</div>`;
+  });
+}
+
+function spawnConfetti() {
+  const colors = ['#00F5C3','#FFD166','#FF6B6B','#A78BFA','#10B981'];
+  for (let i = 0; i < 18; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti-piece';
+    c.style.cssText = `
+      left:${20+Math.random()*60}%;
+      top:${30+Math.random()*40}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation: confetti ${0.6+Math.random()*0.8}s ease-out forwards;
+      animation-delay:${Math.random()*0.3}s;
+    `;
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 1500);
+  }
+}
+
+// INIT
+renderModuleList();
+renderLesson();
+updateUI();
+checkAchievements();
+</script>
+</body>
+</html>

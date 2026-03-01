@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campaign Analytics Dashboard — Ankita Chakrapani</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --ink: #0F0F14;
+  --paper: #F5F0E8;
+  --cream: #EDE8DC;
+  --warm: #D4C5A9;
+  --coral: #E8614A;
+  --forest: #2D6A4F;
+  --gold: #C9963A;
+  --slate: #4A5568;
+  --mist: #8896AB;
+  --white: #FEFCF8;
+  --card-shadow: 0 2px 20px rgba(15,15,20,0.08), 0 1px 4px rgba(15,15,20,0.06);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 400;
+  min-height: 100vh;
+}
+
+/* GRAIN OVERLAY */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 1000; opacity: 0.4;
+}
+
+/* TOP NAV */
+.topbar {
+  background: var(--ink);
+  padding: 0 48px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+  position: sticky; top: 0; z-index: 100;
+}
+.brand {
+  display: flex; align-items: center; gap: 14px;
+}
+.brand-mark {
+  width: 36px; height: 36px; background: var(--coral);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: white; font-family: 'DM Mono';
+}
+.brand-name {
+  font-family: 'DM Serif Display'; font-size: 18px; color: white; letter-spacing: 0.3px;
+}
+.brand-sub { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 2px; font-family: 'DM Mono'; }
+.nav-right { display: flex; align-items: center; gap: 20px; }
+.nav-tag {
+  font-size: 11px; letter-spacing: 2px; font-family: 'DM Mono';
+  color: rgba(255,255,255,0.5);
+}
+.author-chip {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 20px; padding: 6px 14px;
+  font-size: 12px; color: rgba(255,255,255,0.8); font-family: 'DM Mono';
+}
+
+/* HERO STRIP */
+.hero {
+  background: var(--ink);
+  padding: 52px 48px 48px;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; bottom: -60px; right: -60px;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(232,97,74,0.15), transparent 70%);
+  border-radius: 50%;
+}
+.hero::after {
+  content: '';
+  position: absolute; top: -40px; left: 30%;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(201,150,58,0.1), transparent 70%);
+  border-radius: 50%;
+}
+.hero-eyebrow {
+  font-size: 11px; letter-spacing: 3px; color: var(--coral);
+  font-family: 'DM Mono'; margin-bottom: 14px; text-transform: uppercase;
+}
+.hero-title {
+  font-family: 'DM Serif Display'; font-size: 42px; color: white;
+  line-height: 1.15; margin-bottom: 12px; position: relative; z-index: 1;
+}
+.hero-title em { color: var(--gold); font-style: italic; }
+.hero-desc {
+  font-size: 15px; color: rgba(255,255,255,0.5); max-width: 560px;
+  line-height: 1.7; position: relative; z-index: 1;
+}
+.hero-chips { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+.chip {
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px; padding: 5px 14px;
+  font-size: 12px; color: rgba(255,255,255,0.65); font-family: 'DM Mono';
+}
+
+/* KPI ROW */
+.kpi-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: var(--warm); border-bottom: 1px solid var(--warm);
+}
+.kpi-card {
+  background: var(--white);
+  padding: 28px 32px;
+  position: relative; overflow: hidden;
+  transition: background 0.2s;
+  cursor: default;
+}
+.kpi-card:hover { background: var(--cream); }
+.kpi-card::before {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px;
+}
+.kpi-card:nth-child(1)::before { background: var(--coral); }
+.kpi-card:nth-child(2)::before { background: var(--forest); }
+.kpi-card:nth-child(3)::before { background: var(--gold); }
+.kpi-card:nth-child(4)::before { background: var(--slate); }
+.kpi-label {
+  font-size: 10px; letter-spacing: 2.5px; color: var(--mist);
+  font-family: 'DM Mono'; text-transform: uppercase; margin-bottom: 10px;
+}
+.kpi-value {
+  font-family: 'DM Serif Display'; font-size: 38px; line-height: 1; margin-bottom: 6px;
+}
+.kpi-card:nth-child(1) .kpi-value { color: var(--coral); }
+.kpi-card:nth-child(2) .kpi-value { color: var(--forest); }
+.kpi-card:nth-child(3) .kpi-value { color: var(--gold); }
+.kpi-card:nth-child(4) .kpi-value { color: var(--slate); }
+.kpi-delta {
+  font-size: 12px; font-family: 'DM Mono';
+  display: flex; align-items: center; gap: 4px;
+}
+.kpi-delta.up { color: var(--forest); }
+.kpi-delta.down { color: var(--coral); }
+
+/* MAIN GRID */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 1px;
+  background: var(--warm);
+  padding: 1px;
+}
+.panel {
+  background: var(--white);
+  padding: 32px;
+}
+.panel.wide { grid-column: span 2; }
+.panel-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; gap: 16px; }
+.panel-title {
+  font-family: 'DM Serif Display'; font-size: 22px; color: var(--ink);
+  line-height: 1.2;
+}
+.panel-sub { font-size: 12px; color: var(--mist); margin-top: 4px; font-family: 'DM Mono'; }
+.panel-badge {
+  background: var(--cream); border: 1px solid var(--warm);
+  border-radius: 6px; padding: 5px 12px;
+  font-size: 11px; color: var(--slate); font-family: 'DM Mono';
+  white-space: nowrap; flex-shrink: 0;
+}
+.chart-wrap { position: relative; }
+
+/* FILTER TABS */
+.filter-tabs { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid var(--warm); border-radius: 8px; overflow: hidden; width: fit-content; }
+.filter-tab {
+  padding: 7px 16px; font-size: 12px; font-family: 'DM Mono';
+  cursor: pointer; border: none; background: transparent; color: var(--mist);
+  transition: all 0.15s;
+}
+.filter-tab.active { background: var(--ink); color: white; }
+.filter-tab:hover:not(.active) { background: var(--cream); color: var(--ink); }
+
+/* DATA TABLE */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table thead th {
+  font-size: 10px; letter-spacing: 2px; font-family: 'DM Mono';
+  color: var(--mist); text-transform: uppercase; text-align: left;
+  padding: 0 16px 12px 0; border-bottom: 2px solid var(--cream);
+}
+.data-table tbody td {
+  padding: 14px 16px 14px 0; border-bottom: 1px solid var(--cream);
+  font-size: 14px; vertical-align: middle;
+}
+.data-table tbody tr:hover td { background: rgba(213,193,169,0.15); }
+.data-table tbody tr:last-child td { border-bottom: none; }
+.channel-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
+.perf-bar-track { background: var(--cream); border-radius: 100px; height: 6px; width: 100px; overflow: hidden; }
+.perf-bar-fill { height: 100%; border-radius: 100px; }
+.status-pill {
+  display: inline-block; padding: 3px 10px; border-radius: 100px;
+  font-size: 10px; font-family: 'DM Mono'; font-weight: 500;
+}
+.status-pill.high { background: rgba(45,106,79,0.1); color: var(--forest); }
+.status-pill.med { background: rgba(201,150,58,0.12); color: var(--gold); }
+.status-pill.low { background: rgba(232,97,74,0.1); color: var(--coral); }
+
+/* INSIGHTS STRIP */
+.insights-strip {
+  background: var(--ink);
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 1px;
+}
+.insight-card {
+  background: #181820;
+  padding: 28px 32px;
+  position: relative;
+  transition: background 0.2s;
+}
+.insight-card:hover { background: #1E1E28; }
+.insight-num {
+  font-family: 'DM Serif Display'; font-size: 14px;
+  color: var(--coral); margin-bottom: 8px; opacity: 0.6;
+}
+.insight-text {
+  font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.65;
+}
+.insight-text strong { color: white; }
+
+/* RECOMMENDATION */
+.reco-card {
+  background: var(--forest);
+  padding: 32px;
+  display: flex; align-items: flex-start; gap: 24px;
+  grid-column: span 2;
+}
+.reco-icon {
+  font-size: 32px; flex-shrink: 0;
+  width: 60px; height: 60px; background: rgba(255,255,255,0.1);
+  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+}
+.reco-title {
+  font-family: 'DM Serif Display'; font-size: 20px; color: white;
+  margin-bottom: 8px;
+}
+.reco-body { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.7; }
+.reco-metric {
+  margin-top: 16px;
+  display: flex; gap: 24px; flex-wrap: wrap;
+}
+.reco-m { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 16px; }
+.reco-m-val { font-family: 'DM Serif Display'; font-size: 22px; color: white; }
+.reco-m-label { font-size: 10px; color: rgba(255,255,255,0.5); font-family: 'DM Mono'; letter-spacing: 1px; }
+
+/* FOOTER */
+.footer {
+  background: var(--ink); padding: 28px 48px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.footer-left { font-size: 13px; color: rgba(255,255,255,0.4); font-family: 'DM Mono'; }
+.footer-right { font-size: 12px; color: rgba(255,255,255,0.3); font-family: 'DM Mono'; }
+
+/* DONUT LEGEND */
+.donut-legend { display: flex; flex-direction: column; gap: 10px; justify-content: center; padding-left: 24px; }
+.legend-item { display: flex; align-items: center; gap: 10px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.legend-label { font-size: 13px; color: var(--slate); }
+.legend-val { font-size: 12px; font-family: 'DM Mono'; color: var(--mist); margin-left: auto; }
+.donut-wrap { display: flex; align-items: center; }
+
+@media (max-width: 900px) {
+  .kpi-row { grid-template-columns: repeat(2,1fr); }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .panel.wide { grid-column: span 1; }
+  .insights-strip { grid-template-columns: 1fr; }
+  .reco-card { grid-column: span 1; }
+  .topbar, .hero { padding: 16px 20px; }
+  .hero-title { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="brand">
+    <div class="brand-mark">AC</div>
+    <div>
+      <div class="brand-name">Chakrapani Analytics</div>
+      <div class="brand-sub">PORTFOLIO PROJECT</div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <span class="nav-tag">Q4 2024 — Q2 2025</span>
+    <span class="author-chip">Ankita Chakrapani</span>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-eyebrow">Project 01 — Marketing Analytics</div>
+  <h1 class="hero-title">Digital Campaign<br><em>Performance Dashboard</em></h1>
+  <p class="hero-desc">Comprehensive analysis of 18 campaigns across 5 channels — tracking spend efficiency, conversion performance, and ROI to guide $247K in quarterly marketing budget decisions.</p>
+  <div class="hero-chips">
+    <div class="chip">Power BI Logic</div>
+    <div class="chip">Excel Data Model</div>
+    <div class="chip">Python (pandas)</div>
+    <div class="chip">SQL Aggregations</div>
+    <div class="chip">Executive Reporting</div>
+  </div>
+</section>
+
+<!-- KPI ROW -->
+<div class="kpi-row">
+  <div class="kpi-card">
+    <div class="kpi-label">Total Spend</div>
+    <div class="kpi-value">$247K</div>
+    <div class="kpi-delta up">↑ 18% vs prior quarter</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Avg. Conv. Rate</div>
+    <div class="kpi-value">4.8%</div>
+    <div class="kpi-delta up">↑ 1.2pp improvement</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Blended ROAS</div>
+    <div class="kpi-value">3.4×</div>
+    <div class="kpi-delta down">↓ 0.3× from target</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Campaigns Analyzed</div>
+    <div class="kpi-value">18</div>
+    <div class="kpi-delta up">5 channels, 3 quarters</div>
+  </div>
+</div>
+
+<!-- MAIN DASHBOARD GRID -->
+<div class="dashboard-grid">
+
+  <!-- MONTHLY SPEND + CONVERSIONS (wide) -->
+  <div class="panel wide">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Monthly Spend & Conversion Trend</div>
+        <div class="panel-sub">Budget allocation vs. conversion volume — Jan through Jun 2025</div>
+      </div>
+      <div class="panel-badge">6-Month View</div>
+    </div>
+    <div class="filter-tabs" id="trend-tabs">
+      <button class="filter-tab active" onclick="switchTrend('all',this)">All Channels</button>
+      <button class="filter-tab" onclick="switchTrend('paid',this)">Paid Only</button>
+      <button class="filter-tab" onclick="switchTrend('organic',this)">Organic</button>
+    </div>
+    <div class="chart-wrap" style="height:260px">
+      <canvas id="trendChart"></canvas>
+    </div>
+  </div>
+
+  <!-- CHANNEL MIX (donut) -->
+  <div class="panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Budget by Channel</div>
+        <div class="panel-sub">Spend distribution Q1–Q2 2025</div>
+      </div>
+    </div>
+    <div class="donut-wrap">
+      <div style="width:180px;height:180px;flex-shrink:0">
+        <canvas id="donutChart"></canvas>
+      </div>
+      <div class="donut-legend" id="donut-legend"></div>
+    </div>
+  </div>
+
+  <!-- ROI BY CHANNEL (bar) -->
+  <div class="panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">ROAS by Channel</div>
+        <div class="panel-sub">Return on ad spend — higher is better</div>
+      </div>
+      <div class="panel-badge">Target: 3.5×</div>
+    </div>
+    <div class="chart-wrap" style="height:220px">
+      <canvas id="roasChart"></canvas>
+    </div>
+  </div>
+
+  <!-- CAMPAIGN TABLE -->
+  <div class="panel wide">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Campaign Performance Breakdown</div>
+        <div class="panel-sub">Individual campaign metrics with efficiency scoring</div>
+      </div>
+      <div class="filter-tabs" id="table-tabs" style="margin-bottom:0">
+        <button class="filter-tab active" onclick="filterTable('all',this)">All</button>
+        <button class="filter-tab" onclick="filterTable('high',this)">High ROI</button>
+        <button class="filter-tab" onclick="filterTable('low',this)">Needs Work</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="campaign-table">
+        <thead>
+          <tr>
+            <th>Campaign</th>
+            <th>Channel</th>
+            <th>Spend</th>
+            <th>Impressions</th>
+            <th>Conv. Rate</th>
+            <th>ROAS</th>
+            <th>Performance</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- INSIGHTS STRIP -->
+<div class="insights-strip">
+  <div class="insight-card">
+    <div class="insight-num">FINDING 01</div>
+    <div class="insight-text"><strong>Email campaigns</strong> deliver 5.1× ROAS — the highest across all channels — despite representing only 18% of total budget. Reallocation of $15K from Display could yield an estimated $76K in additional revenue.</div>
+  </div>
+  <div class="insight-card">
+    <div class="insight-num">FINDING 02</div>
+    <div class="insight-text"><strong>Social Media retargeting</strong> shows 2.3× higher conversion rate vs. prospecting (6.2% vs 2.7%), confirming that warm audiences are significantly underinvested given current budget splits.</div>
+  </div>
+  <div class="insight-card">
+    <div class="insight-num">FINDING 03</div>
+    <div class="insight-text"><strong>Display advertising</strong> absorbs 31% of spend but produces 1.8× ROAS — below the 3.5× target. Recommend reallocating $40K to Email and Paid Social retargeting in Q3.</div>
+  </div>
+</div>
+
+<!-- RECOMMENDATION CARD -->
+<div class="dashboard-grid">
+  <div class="reco-card">
+    <div class="reco-icon">📋</div>
+    <div>
+      <div class="reco-title">Strategic Recommendation — Q3 Budget Reallocation</div>
+      <div class="reco-body">Based on ROAS analysis and conversion rate patterns, I recommend shifting $55,000 from underperforming Display campaigns to Email automation sequences and Social Media retargeting audiences. This reallocation maintains total spend while projecting a 23% improvement in overall ROAS, bringing blended return from 3.4× to an estimated 4.2×.</div>
+      <div class="reco-metric">
+        <div class="reco-m"><div class="reco-m-val">+$62K</div><div class="reco-m-label">PROJECTED ADDED REVENUE</div></div>
+        <div class="reco-m"><div class="reco-m-val">+0.8×</div><div class="reco-m-label">ROAS IMPROVEMENT</div></div>
+        <div class="reco-m"><div class="reco-m-val">Q3 2025</div><div class="reco-m-label">IMPLEMENTATION TARGET</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-left">Ankita Chakrapani — Marketing Analytics Portfolio · ankita2006@outlook.com · linkedin.com/in/ankita-chakrapani</div>
+  <div class="footer-right">Data: Synthetic dataset modeled on real campaign benchmarks · Built with Chart.js</div>
+</footer>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────
+const CAMPAIGNS = [
+  { name: "Summer Email Blast",   channel: "Email",         spend: 8200,  impr: "142K",  cvr: 6.1, roas: 5.8, perf: 92 },
+  { name: "Retargeting Wave 3",   channel: "Social Media",  spend: 12400, impr: "380K",  cvr: 5.9, roas: 4.9, perf: 86 },
+  { name: "Q4 Nurture Sequence",  channel: "Email",         spend: 6800,  impr: "98K",   cvr: 5.4, roas: 5.1, perf: 88 },
+  { name: "Brand Awareness Run",  channel: "Display",       spend: 22000, impr: "1.2M",  cvr: 1.2, roas: 1.6, perf: 28 },
+  { name: "Paid Search — Brand",  channel: "Search",        spend: 18500, impr: "210K",  cvr: 7.2, roas: 6.2, perf: 95 },
+  { name: "Instagram Stories",    channel: "Social Media",  spend: 9800,  impr: "520K",  cvr: 2.8, roas: 2.7, perf: 48 },
+  { name: "Prospecting Display",  channel: "Display",       spend: 31000, impr: "2.1M",  cvr: 0.9, roas: 1.4, perf: 18 },
+  { name: "LinkedIn B2B",         channel: "Social Media",  spend: 14200, impr: "88K",   cvr: 3.6, roas: 3.8, perf: 64 },
+  { name: "Welcome Series Email", channel: "Email",         spend: 4200,  impr: "64K",   cvr: 8.1, roas: 7.2, perf: 98 },
+  { name: "YouTube Pre-Roll",     channel: "Display",       spend: 19500, impr: "890K",  cvr: 1.8, roas: 2.1, perf: 42 },
+  { name: "Paid Search — Generic",channel: "Search",        spend: 24000, impr: "340K",  cvr: 4.9, roas: 4.1, perf: 72 },
+  { name: "Facebook Lookalike",   channel: "Social Media",  spend: 11600, impr: "620K",  cvr: 2.2, roas: 2.4, perf: 38 },
+  { name: "Affiliate Network",    channel: "Affiliate",     spend: 16800, impr: "290K",  cvr: 3.1, roas: 3.3, perf: 56 },
+  { name: "Re-engagement Email",  channel: "Email",         spend: 3100,  impr: "41K",   cvr: 9.2, roas: 8.1, perf: 100},
+  { name: "GDN Remarketing",      channel: "Display",       spend: 8900,  impr: "480K",  cvr: 2.9, roas: 2.8, perf: 52 },
+  { name: "Twitter/X Promoted",   channel: "Social Media",  spend: 7200,  impr: "310K",  cvr: 1.4, roas: 1.5, perf: 22 },
+  { name: "Affiliate Top-10",     channel: "Affiliate",     spend: 9400,  impr: "170K",  cvr: 4.2, roas: 4.0, perf: 70 },
+  { name: "Search Competitor KW", channel: "Search",        spend: 19200, impr: "190K",  cvr: 5.8, roas: 5.0, perf: 84 },
+];
+
+const CH_COLORS = {
+  "Email":        "#2D6A4F",
+  "Social Media": "#E8614A",
+  "Display":      "#C9963A",
+  "Search":       "#4A5568",
+  "Affiliate":    "#8896AB",
+};
+
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun"];
+const TREND_DATA = {
+  all:     { spend: [28400,31200,38600,42100,49800,56900], conv: [1820,2040,2680,3120,3950,4810] },
+  paid:    { spend: [24000,26800,32100,35400,42000,48200], conv: [1600,1820,2340,2780,3510,4200] },
+  organic: { spend: [4400,4400,6500,6700,7800,8700],   conv: [220,220,340,340,440,610] },
+};
+
+// ── TREND CHART ──────────────────────────────────────────────────
+const trendCtx = document.getElementById('trendChart').getContext('2d');
+let trendChart = new Chart(trendCtx, {
+  type: 'bar',
+  data: {
+    labels: MONTHS,
+    datasets: [
+      {
+        label: 'Spend ($)',
+        data: TREND_DATA.all.spend,
+        backgroundColor: 'rgba(15,15,20,0.08)',
+        borderColor: 'rgba(15,15,20,0.2)',
+        borderWidth: 1,
+        borderRadius: 4,
+        yAxisID: 'y',
+      },
+      {
+        label: 'Conversions',
+        data: TREND_DATA.all.conv,
+        type: 'line',
+        borderColor: '#E8614A',
+        backgroundColor: 'rgba(232,97,74,0.08)',
+        pointBackgroundColor: '#E8614A',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2.5,
+        tension: 0.4,
+        fill: true,
+        yAxisID: 'y1',
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: {
+      backgroundColor: '#0F0F14', titleColor: '#F5F0E8', bodyColor: 'rgba(245,240,232,0.7)',
+      padding: 12, cornerRadius: 8,
+    }},
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { family: 'DM Mono', size: 11 }, color: '#8896AB' } },
+      y: {
+        position: 'left', grid: { color: 'rgba(0,0,0,0.05)' },
+        ticks: { font: { family: 'DM Mono', size: 11 }, color: '#8896AB',
+          callback: v => '$'+(v/1000).toFixed(0)+'K' }
+      },
+      y1: {
+        position: 'right', grid: { display: false },
+        ticks: { font: { family: 'DM Mono', size: 11 }, color: '#E8614A' }
+      }
+    }
+  }
+});
+
+function switchTrend(key, btn) {
+  document.querySelectorAll('#trend-tabs .filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  trendChart.data.datasets[0].data = TREND_DATA[key].spend;
+  trendChart.data.datasets[1].data = TREND_DATA[key].conv;
+  trendChart.update('active');
+}
+
+// ── DONUT CHART ──────────────────────────────────────────────────
+const channelSpend = {};
+CAMPAIGNS.forEach(c => { channelSpend[c.channel] = (channelSpend[c.channel]||0) + c.spend; });
+const channels = Object.keys(channelSpend);
+const total = Object.values(channelSpend).reduce((a,b)=>a+b,0);
+
+const donutCtx = document.getElementById('donutChart').getContext('2d');
+new Chart(donutCtx, {
+  type: 'doughnut',
+  data: {
+    labels: channels,
+    datasets: [{
+      data: channels.map(c => channelSpend[c]),
+      backgroundColor: channels.map(c => CH_COLORS[c]),
+      borderWidth: 0,
+      hoverOffset: 6,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '68%',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#0F0F14', titleColor: '#F5F0E8', bodyColor: 'rgba(245,240,232,0.7)',
+        padding: 10, cornerRadius: 8,
+        callbacks: { label: ctx => ` $${(ctx.raw/1000).toFixed(0)}K (${((ctx.raw/total)*100).toFixed(0)}%)` }
+      }
+    }
+  }
+});
+
+// Donut legend
+const legEl = document.getElementById('donut-legend');
+channels.forEach(ch => {
+  const pct = ((channelSpend[ch]/total)*100).toFixed(0);
+  legEl.innerHTML += `<div class="legend-item">
+    <div class="legend-dot" style="background:${CH_COLORS[ch]}"></div>
+    <span class="legend-label">${ch}</span>
+    <span class="legend-val">${pct}%</span>
+  </div>`;
+});
+
+// ── ROAS CHART ──────────────────────────────────────────────────
+const roasData = {};
+const roasCount = {};
+CAMPAIGNS.forEach(c => {
+  roasData[c.channel] = (roasData[c.channel]||0) + c.roas;
+  roasCount[c.channel] = (roasCount[c.channel]||0) + 1;
+});
+const avgRoas = channels.map(ch => +(roasData[ch]/roasCount[ch]).toFixed(1));
+
+const roasCtx = document.getElementById('roasChart').getContext('2d');
+new Chart(roasCtx, {
+  type: 'bar',
+  data: {
+    labels: channels,
+    datasets: [{
+      label: 'Avg ROAS',
+      data: avgRoas,
+      backgroundColor: channels.map(ch => avgRoas[channels.indexOf(ch)] >= 3.5 ? CH_COLORS[ch] : 'rgba(232,97,74,0.2)'),
+      borderColor: channels.map(ch => avgRoas[channels.indexOf(ch)] >= 3.5 ? CH_COLORS[ch] : '#E8614A'),
+      borderWidth: 1.5,
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: { backgroundColor: '#0F0F14', titleColor: '#F5F0E8', bodyColor: 'rgba(245,240,232,0.7)', padding: 10, cornerRadius: 8 },
+      annotation: {}
+    },
+    scales: {
+      x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { family: 'DM Mono', size: 11 }, color: '#8896AB', callback: v => v+'×' } },
+      y: { grid: { display: false }, ticks: { font: { family: 'DM Mono', size: 11 }, color: '#4A5568' } }
+    }
+  }
+});
+
+// ── CAMPAIGN TABLE ──────────────────────────────────────────────
+function renderTable(filter) {
+  const tbody = document.getElementById('table-body');
+  let data = CAMPAIGNS;
+  if (filter === 'high') data = CAMPAIGNS.filter(c => c.roas >= 4.0);
+  if (filter === 'low')  data = CAMPAIGNS.filter(c => c.roas < 2.5);
+  data = [...data].sort((a,b) => b.roas - a.roas);
+
+  tbody.innerHTML = data.map(c => {
+    const status = c.perf >= 75 ? 'high' : c.perf >= 45 ? 'med' : 'low';
+    const statusLabel = c.perf >= 75 ? 'High ROI' : c.perf >= 45 ? 'Average' : 'Review';
+    const barColor = c.perf >= 75 ? '#2D6A4F' : c.perf >= 45 ? '#C9963A' : '#E8614A';
+    return `<tr>
+      <td><strong>${c.name}</strong></td>
+      <td><span class="channel-dot" style="background:${CH_COLORS[c.channel]}"></span>${c.channel}</td>
+      <td style="font-family:'DM Mono';font-size:13px">$${(c.spend/1000).toFixed(1)}K</td>
+      <td style="font-family:'DM Mono';font-size:13px;color:#8896AB">${c.impr}</td>
+      <td style="font-family:'DM Mono';font-size:13px">${c.cvr}%</td>
+      <td style="font-family:'DM Serif Display';font-size:16px">${c.roas}×</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="perf-bar-track"><div class="perf-bar-fill" style="width:${c.perf}%;background:${barColor}"></div></div>
+          <span style="font-size:11px;font-family:'DM Mono';color:#8896AB">${c.perf}</span>
+        </div>
+      </td>
+      <td><span class="status-pill ${status}">${statusLabel}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTable(filter, btn) {
+  document.querySelectorAll('#table-tabs .filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable(filter);
+}
+
+renderTable('all');
+</script>
+</body>
+</html>

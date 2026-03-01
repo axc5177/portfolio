@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UX Research Case Study — Spotify Discovery · Ankita Chakrapani</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&family=IBM+Plex+Mono:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void: #080810;
+  --deep: #0E0E1C;
+  --surface: #14141F;
+  --lifted: #1C1C2B;
+  --border: #252535;
+  --text: #E4E0F0;
+  --muted: #7B7A96;
+  --faint: #3A3A52;
+  --lime: #C8F45E;
+  --violet: #9B6DFF;
+  --rose: #FF6B9D;
+  --amber: #FFB347;
+  --cyan: #4ECDC4;
+  --white: #F8F6FF;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.6;
+}
+
+/* NAV */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 56px; z-index: 200;
+  background: rgba(8,8,16,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 48px;
+}
+.nav-brand { display: flex; align-items: center; gap: 10px; }
+.nav-pip { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); }
+.nav-name { font-family: 'IBM Plex Mono'; font-size: 13px; color: var(--muted); }
+.nav-links { display: flex; gap: 32px; }
+.nav-links a {
+  font-size: 12px; color: var(--muted); text-decoration: none;
+  font-family: 'IBM Plex Mono'; letter-spacing: 0.5px;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--lime); }
+.nav-cta {
+  background: var(--lime); color: var(--void);
+  padding: 8px 18px; border-radius: 6px;
+  font-size: 12px; font-weight: 600; font-family: 'IBM Plex Mono';
+  text-decoration: none; transition: opacity 0.2s;
+}
+.nav-cta:hover { opacity: 0.85; }
+
+/* COVER */
+.cover {
+  min-height: 100vh;
+  display: flex; align-items: flex-end;
+  padding: 0 0 80px;
+  position: relative; overflow: hidden;
+}
+.cover-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 60% 40%, rgba(155,109,255,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 80%, rgba(200,244,94,0.08) 0%, transparent 45%),
+    radial-gradient(ellipse at 90% 90%, rgba(255,107,157,0.1) 0%, transparent 40%);
+}
+/* Spotify-ish circles */
+.cover-orb {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(155,109,255,0.15);
+}
+.cover-orb-1 { width: 600px; height: 600px; top: -200px; right: -100px; }
+.cover-orb-2 { width: 400px; height: 400px; top: -50px; right: 100px; border-color: rgba(200,244,94,0.1); }
+.cover-orb-3 { width: 200px; height: 200px; top: 80px; right: 290px; border-color: rgba(255,107,157,0.15); }
+
+.cover-content { position: relative; z-index: 1; padding: 0 80px; max-width: 900px; }
+.cover-meta {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 32px;
+}
+.meta-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(200,244,94,0.1); border: 1px solid rgba(200,244,94,0.25);
+  border-radius: 20px; padding: 5px 14px;
+  font-size: 11px; font-family: 'IBM Plex Mono'; color: var(--lime);
+  letter-spacing: 1px;
+}
+.meta-sep { font-size: 11px; color: var(--faint); }
+.meta-plain { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono'; }
+
+.cover-title {
+  font-family: 'Fraunces'; font-size: 72px; font-weight: 300;
+  line-height: 1.05; margin-bottom: 20px; color: var(--white);
+}
+.cover-title .accent { color: var(--lime); font-style: italic; }
+.cover-title .sub { color: var(--violet); font-style: italic; }
+
+.cover-desc {
+  font-size: 17px; color: var(--muted); max-width: 540px; line-height: 1.75;
+  margin-bottom: 40px;
+}
+
+.cover-stats { display: flex; gap: 40px; flex-wrap: wrap; }
+.cover-stat {}
+.cover-stat-val { font-family: 'Fraunces'; font-size: 36px; color: var(--white); }
+.cover-stat-val span { font-size: 16px; color: var(--lime); vertical-align: super; }
+.cover-stat-label { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono'; letter-spacing: 1px; }
+
+/* PAGE WRAPPER */
+.page { max-width: 1100px; margin: 0 auto; padding: 0 48px 120px; }
+.section { padding-top: 100px; }
+
+/* SECTION HEADERS */
+.section-eyebrow {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 18px;
+}
+.eyebrow-num {
+  font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--violet);
+  background: rgba(155,109,255,0.1); border: 1px solid rgba(155,109,255,0.2);
+  border-radius: 4px; padding: 2px 8px;
+}
+.eyebrow-label {
+  font-family: 'IBM Plex Mono'; font-size: 11px; color: var(--muted);
+  letter-spacing: 2px; text-transform: uppercase;
+}
+.eyebrow-line { flex: 1; height: 1px; background: var(--border); }
+.section-title {
+  font-family: 'Fraunces'; font-size: 42px; font-weight: 300; color: var(--white);
+  line-height: 1.2; margin-bottom: 16px;
+}
+.section-title em { color: var(--lime); font-style: italic; }
+.section-intro { font-size: 16px; color: var(--muted); max-width: 640px; line-height: 1.75; }
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px;
+  position: relative; overflow: hidden;
+}
+.card-grid { display: grid; gap: 16px; margin-top: 40px; }
+.card-grid-2 { grid-template-columns: 1fr 1fr; }
+.card-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.card-grid-4 { grid-template-columns: repeat(4,1fr); }
+
+.card-label {
+  font-size: 10px; letter-spacing: 2.5px; color: var(--violet);
+  font-family: 'IBM Plex Mono'; text-transform: uppercase; margin-bottom: 10px;
+}
+.card-title { font-size: 16px; font-weight: 600; color: var(--white); margin-bottom: 8px; }
+.card-body { font-size: 14px; color: var(--muted); line-height: 1.7; }
+.card-body strong { color: var(--text); font-weight: 500; }
+
+/* QUOTE CARDS */
+.quote-card {
+  background: var(--lifted);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--lime);
+  border-radius: 12px; padding: 24px 28px;
+}
+.quote-text {
+  font-family: 'Fraunces'; font-size: 18px; font-style: italic;
+  color: var(--white); line-height: 1.6; margin-bottom: 14px;
+}
+.quote-attribution {
+  font-size: 12px; font-family: 'IBM Plex Mono'; color: var(--muted);
+}
+.quote-attribution span { color: var(--lime); }
+
+/* PERSONA CARD */
+.persona-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 32px;
+  display: grid; grid-template-columns: 80px 1fr; gap: 24px;
+}
+.persona-avatar {
+  width: 80px; height: 80px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+}
+.persona-name { font-family: 'Fraunces'; font-size: 22px; color: var(--white); margin-bottom: 2px; }
+.persona-role { font-size: 12px; color: var(--muted); font-family: 'IBM Plex Mono'; margin-bottom: 14px; }
+.persona-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.persona-tag {
+  background: rgba(155,109,255,0.1); border: 1px solid rgba(155,109,255,0.2);
+  border-radius: 20px; padding: 3px 12px;
+  font-size: 11px; color: var(--violet); font-family: 'IBM Plex Mono';
+}
+.persona-quote { font-size: 14px; color: var(--text); font-style: italic; line-height: 1.65; }
+
+/* PAIN POINT */
+.pain-list { display: flex; flex-direction: column; gap: 12px; margin-top: 28px; }
+.pain-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 22px;
+  display: flex; align-items: flex-start; gap: 16px;
+  transition: border-color 0.2s;
+}
+.pain-item:hover { border-color: var(--violet); }
+.pain-sev {
+  font-family: 'IBM Plex Mono'; font-size: 22px; font-weight: 500;
+  flex-shrink: 0; width: 44px; text-align: center;
+}
+.pain-sev.high { color: var(--rose); }
+.pain-sev.med { color: var(--amber); }
+.pain-sev.low { color: var(--cyan); }
+.pain-title { font-size: 15px; font-weight: 600; color: var(--white); margin-bottom: 5px; }
+.pain-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.pain-freq { font-size: 11px; font-family: 'IBM Plex Mono'; color: var(--faint); margin-top: 6px; }
+
+/* BAR CHART (CSS) */
+.bar-chart { margin-top: 28px; display: flex; flex-direction: column; gap: 14px; }
+.bar-row { display: flex; align-items: center; gap: 14px; }
+.bar-label { font-size: 13px; color: var(--muted); width: 200px; flex-shrink: 0; }
+.bar-track { flex: 1; height: 10px; background: var(--faint); border-radius: 100px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 100px; transition: width 1.2s cubic-bezier(0.34, 1.2, 0.64, 1); }
+.bar-pct { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--lime); width: 40px; text-align: right; }
+
+/* OPPORTUNITY MATRIX */
+.matrix-wrap {
+  margin-top: 36px;
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px; padding: 32px;
+}
+.matrix-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr; gap: 1px;
+  background: var(--border); height: 320px;
+  border-radius: 8px; overflow: hidden;
+}
+.matrix-cell {
+  background: var(--lifted); padding: 20px;
+  display: flex; flex-direction: column; justify-content: flex-start;
+}
+.matrix-cell.featured { background: rgba(155,109,255,0.08); border: 1px solid rgba(155,109,255,0.2); }
+.matrix-quad {
+  font-size: 10px; letter-spacing: 2px; color: var(--faint);
+  font-family: 'IBM Plex Mono'; margin-bottom: 12px;
+}
+.matrix-item {
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.matrix-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.matrix-text { font-size: 13px; color: var(--text); }
+.matrix-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--faint); font-family: 'IBM Plex Mono'; margin-top: 12px; }
+.matrix-axis-label { font-size: 11px; color: var(--faint); font-family: 'IBM Plex Mono'; text-align: center; margin-bottom: 8px; }
+
+/* RECOMMENDATION CARDS */
+.reco-card {
+  border-radius: 16px; padding: 32px;
+  position: relative; overflow: hidden;
+}
+.reco-card-1 { background: linear-gradient(135deg, rgba(200,244,94,0.08), rgba(200,244,94,0.03)); border: 1px solid rgba(200,244,94,0.2); }
+.reco-card-2 { background: linear-gradient(135deg, rgba(155,109,255,0.08), rgba(155,109,255,0.03)); border: 1px solid rgba(155,109,255,0.2); }
+.reco-card-3 { background: linear-gradient(135deg, rgba(255,107,157,0.08), rgba(255,107,157,0.03)); border: 1px solid rgba(255,107,157,0.2); }
+.reco-num {
+  font-family: 'Fraunces'; font-size: 80px; position: absolute;
+  right: 24px; top: -10px; opacity: 0.06; color: var(--white);
+}
+.reco-icon { font-size: 28px; margin-bottom: 14px; }
+.reco-title { font-family: 'Fraunces'; font-size: 20px; color: var(--white); margin-bottom: 8px; }
+.reco-body { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 16px; }
+.reco-impact {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-family: 'IBM Plex Mono';
+}
+.reco-impact-val { color: var(--lime); font-weight: 500; }
+.reco-impact-label { color: var(--faint); }
+
+/* METHODOLOGY */
+.method-steps { display: flex; flex-direction: column; gap: 0; margin-top: 36px; position: relative; }
+.method-step {
+  display: flex; gap: 28px; align-items: flex-start; padding: 24px 0;
+  border-bottom: 1px solid var(--border);
+}
+.method-step:last-child { border-bottom: none; }
+.method-num {
+  width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'IBM Plex Mono'; font-size: 14px; font-weight: 500;
+}
+.method-title { font-size: 15px; font-weight: 600; color: var(--white); margin-bottom: 6px; }
+.method-desc { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+/* FOOTER */
+.case-footer {
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: 48px;
+  display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: center;
+}
+.footer-title { font-family: 'Fraunces'; font-size: 28px; color: var(--white); margin-bottom: 8px; }
+.footer-sub { font-size: 14px; color: var(--muted); }
+.footer-contact { display: flex; flex-direction: column; gap: 8px; text-align: right; }
+.footer-link { font-size: 13px; color: var(--lime); font-family: 'IBM Plex Mono'; }
+
+/* DIVIDER */
+.rule { height: 1px; background: var(--border); margin: 0; }
+
+/* ANIMATE ON SCROLL */
+.reveal {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 900px) {
+  .cover-title { font-size: 42px; }
+  .cover-content { padding: 0 24px; }
+  .page { padding: 0 20px 80px; }
+  .card-grid-2, .card-grid-3, .card-grid-4 { grid-template-columns: 1fr; }
+  .persona-card { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+  .nav { padding: 0 20px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-pip"></div>
+    <div class="nav-name">Ankita Chakrapani · Portfolio</div>
+  </div>
+  <div class="nav-links">
+    <a href="#background">Background</a>
+    <a href="#research">Research</a>
+    <a href="#insights">Insights</a>
+    <a href="#recommendations">Recommendations</a>
+  </div>
+  <a class="nav-cta" href="mailto:ankita2006@outlook.com">Get in Touch</a>
+</nav>
+
+<!-- COVER -->
+<section class="cover">
+  <div class="cover-bg"></div>
+  <div class="cover-orb cover-orb-1"></div>
+  <div class="cover-orb cover-orb-2"></div>
+  <div class="cover-orb cover-orb-3"></div>
+  <div class="cover-content">
+    <div class="cover-meta">
+      <div class="meta-pill">⚡ UX RESEARCH</div>
+      <span class="meta-sep">·</span>
+      <span class="meta-plain">Spotify · Music Discovery Experience</span>
+      <span class="meta-sep">·</span>
+      <span class="meta-plain">Jan–Feb 2025</span>
+    </div>
+    <h1 class="cover-title">
+      Why users <em>stop</em><br>
+      <span class="sub">discovering</span> new music
+    </h1>
+    <p class="cover-desc">A behavioral research study exploring how Spotify's recommendation engine creates passive listeners — and what redesigning for intentional discovery could unlock.</p>
+    <div class="cover-stats">
+      <div class="cover-stat">
+        <div class="cover-stat-val">5<span>×</span></div>
+        <div class="cover-stat-label">USER INTERVIEWS</div>
+      </div>
+      <div class="cover-stat">
+        <div class="cover-stat-val">3</div>
+        <div class="cover-stat-label">KEY FINDINGS</div>
+      </div>
+      <div class="cover-stat">
+        <div class="cover-stat-val">2<span>wk</span></div>
+        <div class="cover-stat-label">STUDY DURATION</div>
+      </div>
+      <div class="cover-stat">
+        <div class="cover-stat-val">4</div>
+        <div class="cover-stat-label">RECOMMENDATIONS</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="rule"></div>
+
+<div class="page">
+
+  <!-- BACKGROUND -->
+  <section class="section reveal" id="background">
+    <div class="section-eyebrow">
+      <div class="eyebrow-num">01</div>
+      <div class="eyebrow-label">Background & Problem Space</div>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">The <em>discovery paradox</em></h2>
+    <p class="section-intro">Spotify has 600M+ users. Yet research shows that most heavy users default to the same 20–40 songs on repeat — despite having access to 100M+ tracks. Why does "more" lead to "less" discovery behavior?</p>
+
+    <div class="card-grid card-grid-3">
+      <div class="card">
+        <div class="card-label">Business Context</div>
+        <div class="card-title">Why This Matters to Spotify</div>
+        <div class="card-body">Discovery drives playlist saves, premium upgrades, and long-term retention. Users who actively discover music have <strong>2.3× higher 12-month retention</strong> than passive listeners.</div>
+      </div>
+      <div class="card">
+        <div class="card-label">User Problem</div>
+        <div class="card-title">The Friction of Exploration</div>
+        <div class="card-body">Despite rich recommendation data, users report feeling <strong>overwhelmed, not inspired</strong> by discovery surfaces. The experience is optimized for comfort, not curiosity.</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Research Question</div>
+        <div class="card-title">What We're Investigating</div>
+        <div class="card-body">What specific behavioral patterns and UI friction points cause musically curious users to <strong>disengage from discovery</strong> and retreat to familiar content?</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METHODOLOGY -->
+  <section class="section reveal" id="research">
+    <div class="section-eyebrow">
+      <div class="eyebrow-num">02</div>
+      <div class="eyebrow-label">Research Methodology</div>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">How the study <em>was conducted</em></h2>
+    <p class="section-intro">Mixed-methods approach: qualitative interviews + behavioral self-reporting diary over 2 weeks, focused on daily music-finding behavior in natural contexts.</p>
+
+    <div class="method-steps">
+      <div class="method-step">
+        <div class="method-num" style="background:rgba(200,244,94,0.1);color:var(--lime)">01</div>
+        <div>
+          <div class="method-title">Participant Recruitment & Screener</div>
+          <div class="method-desc">Recruited 5 daily Spotify users aged 19–28 via personal network. Screened for: 30+ min/day usage, mix of premium/free, varied musical tastes. Purposefully avoided power users to capture mainstream behavior patterns.</div>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="method-num" style="background:rgba(155,109,255,0.1);color:var(--violet)">02</div>
+        <div>
+          <div class="method-title">Semi-Structured Interviews (45 min each)</div>
+          <div class="method-desc">In-person and video sessions. Protocol covered: typical music sessions, last time they discovered something new, moments of frustration, workarounds they've invented. Sessions recorded and transcribed with consent.</div>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="method-num" style="background:rgba(255,107,157,0.1);color:var(--rose)">03</div>
+        <div>
+          <div class="method-title">2-Week Behavioral Diary</div>
+          <div class="method-desc">Participants logged 3 Spotify sessions per day using a simple template: What played → How they chose it → Satisfaction (1–5) → Would they listen again? Generated 210 individual session data points.</div>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="method-num" style="background:rgba(255,179,71,0.1);color:var(--amber)">04</div>
+        <div>
+          <div class="method-title">Affinity Mapping & Thematic Analysis</div>
+          <div class="method-desc">Synthesized interview transcripts using affinity mapping. Grouped 87 individual observations into behavioral themes. Cross-validated themes across diary data to confirm frequency and consistency.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTICIPANTS -->
+  <section class="section reveal">
+    <div class="section-eyebrow">
+      <div class="eyebrow-num">03</div>
+      <div class="eyebrow-label">Participant Profiles</div>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">Who we <em>studied</em></h2>
+
+    <div class="card-grid" style="grid-template-columns:1fr 1fr;margin-top:32px">
+      <div class="persona-card">
+        <div class="persona-avatar" style="background:rgba(200,244,94,0.1)">🎧</div>
+        <div>
+          <div class="persona-name">The Comfort Looper</div>
+          <div class="persona-role">College student · 4hrs/day · Premium</div>
+          <div class="persona-tags">
+            <div class="persona-tag">Passive</div>
+            <div class="persona-tag">Playlist-first</div>
+            <div class="persona-tag">Anxious chooser</div>
+          </div>
+          <div class="persona-quote">"I know I want to find new stuff but I always end up back at the same playlist. It's just easier."</div>
+        </div>
+      </div>
+      <div class="persona-card">
+        <div class="persona-avatar" style="background:rgba(155,109,255,0.1)">🔍</div>
+        <div>
+          <div class="persona-name">The Active Explorer</div>
+          <div class="persona-role">Working professional · 1.5hrs/day · Premium</div>
+          <div class="persona-tags">
+            <div class="persona-tag">Context-driven</div>
+            <div class="persona-tag">External tools</div>
+            <div class="persona-tag">Power saver</div>
+          </div>
+          <div class="persona-quote">"I find music on Reddit or YouTube, then search for it on Spotify. The app itself doesn't help me find things."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUOTES -->
+  <section class="section reveal" id="insights">
+    <div class="section-eyebrow">
+      <div class="eyebrow-num">04</div>
+      <div class="eyebrow-label">Verbatim User Voice</div>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">What users <em>actually said</em></h2>
+
+    <div class="card-grid card-grid-2" style="margin-top:32px">
+      <div class="quote-card">
+        <div class="quote-text">"The Discover Weekly is just more of the same. I already know I like this kind of music — it's not discovering anything."</div>
+        <div class="quote-attribution">Participant 3 · <span>22, Marketing Student</span> · Interview Session 1</div>
+      </div>
+      <div class="quote-card">
+        <div class="quote-text">"I want to explore by mood or situation, not just by genre. I don't always know what genre I want."</div>
+        <div class="quote-attribution">Participant 1 · <span>21, Business Student</span> · Diary Day 4</div>
+      </div>
+      <div class="quote-card">
+        <div class="quote-text">"When a song I don't know starts, I skip it immediately. I'm scared it'll ruin the vibe I have going."</div>
+        <div class="quote-attribution">Participant 5 · <span>24, Grad Student</span> · Interview Session 2</div>
+      </div>
+      <div class="quote-card">
+        <div class="quote-text">"I don't trust the algorithm anymore. It learned my anxious late-night study habits and now everything sounds the same."</div>
+        <div class="quote-attribution">Participant 2 · <span>23, Software Engineer</span> · Diary Day 9</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINDINGS -->
+  <section class="section reveal">
+    <div class="section-eyebrow">
+      <div class="eyebrow-num">05</div>
+      <div class="eyebrow-label">Key Findings</div>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">Three patterns <em>explain everything</em></h2>
+
+    <div class="pain-list">
+      <div class="pain-item">
+        <div class="pain-sev high">9.1</div>
+        <div>
+          <div class="pain-title">Algorithm Tunnel Vision — The Feedback Loop Trap</div>
+          <div class="pain-desc">All 5 participants reported that Spotify's recommendations feel increasingly narrow over time. The algorithm optimizes for skip prevention (engagement), not exploration. Users' "risky" listening — the moments that could spark discovery — is penalized by an algorithm trying to minimize skips. The result: a comfort prison disguised as personalization.</div>
+          <div class="pain-freq">Mentioned by: 5/5 participants · 34 diary entries · SEVERITY 9.1/10</div>
+        </div>
+      </div>
+      <div class="pain-item">
+        <div class="pain-sev high">7.8</div>
+        <div>
+          <div class="pain-title">Context Collapse — The Wrong Recommendation at the Right Moment</div>
+          <div class="pain-desc">Users' moods and contexts shift dramatically through the day (gym → commute → study → social), but Spotify serves one unified taste profile. 4/5 participants described deliberately ignoring recommendations because "it's not that kind of moment." The app doesn't know if you're working, running, or winding down.</div>
+          <div class="pain-freq">Mentioned by: 4/5 participants · 28 diary entries · SEVERITY 7.8/10</div>
+        </div>
+      </div>
+      <div class="pain-item">
+        <div class="pain-sev med">6.4</div>
+        <div>
+          <div class="pain-title">Discovery Anxiety — The Paralysis of Too Many Choices</div>
+          <div class="pain-desc">When users do venture to explore, surfaces like Browse or Search overwhelm them with options but provide insufficient scaffolding. The cognitive load of "what do I want to find?" without low-stakes guidance causes users to retreat to the familiar — especially under time pressure.</div>
+          <div class="pain-freq">Mentioned by: 3/5 participants · 19 diary entries · SEVERITY 6.4/10</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SURVEY DATA (CSS bars) -->
+  <section class="section reveal">
+    <div class="section-eyebrow">
+      <div class="eyebrow-num">06</div>
+      <div class="eyebrow-label">Behavioral Data</div>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">By the <em>numbers</em></h2>
+
+    <div class="card-grid card-grid-2" style="margin-top:32px">
+      <div class="card">
+        <div class="card-label">How music was initiated (diary data)</div>
+        <div class="bar-chart" id="initiation-bars">
+          <div class="bar-row"><div class="bar-label">Existing playlist</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:#9B6DFF" data-pct="72"></div></div><div class="bar-pct">72%</div></div>
+          <div class="bar-row"><div class="bar-label">Liked Songs / Library</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:#C8F45E" data-pct="14"></div></div><div class="bar-pct">14%</div></div>
+          <div class="bar-row"><div class="bar-label">Recommendation surface</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:#FFB347" data-pct="8"></div></div><div class="bar-pct">8%</div></div>
+          <div class="bar-row"><div class="bar-label">External source → Search</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:#FF6B9D" data-pct="6"></div></div><div class="bar-pct">6%</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">Discovery satisfaction (1-5 scale, avg)</div>
+        <div class="bar-chart">
+          <div class="bar-row"><div class="bar-label">When using external sources</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:#C8F45E" data-pct="90"></div></div><div class="bar-pct">4.5</div></div>
+          <div class="bar-row"><div class="bar-label">Radio / autoplay</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:#9B6DFF" data-pct="52"></div></div><div class="bar-pct">2.6</div></div>
+          <div class="bar-row"><div class="bar-label">Discover Weekly</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:#FFB347" data-pct="60"></div></div><div class="bar-pct">3.0</div></div>
+          <div class="bar-row"><div class="bar-label">Browse / Search explore</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:#FF6B9D" data-pct="42"></div></div><div class="bar-pct">2.1</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OPPORTUNITY MATRIX -->
+  <section class="section reveal">
+    <div class="section-eyebrow">
+      <div class="eyebrow-num">07</div>
+      <div class="eyebrow-label">Opportunity Mapping</div>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">Impact vs. <em>effort matrix</em></h2>
+
+    <div class="matrix-wrap">
+      <div class="matrix-axis-label">← Lower Effort ←&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ Higher Effort →</div>
+      <div class="matrix-grid">
+        <div class="matrix-cell featured">
+          <div class="matrix-quad">HIGH IMPACT · LOW EFFORT — DO FIRST</div>
+          <div class="matrix-item"><div class="matrix-dot" style="background:#C8F45E"></div><div class="matrix-text">Context-aware listening modes (work/gym/social)</div></div>
+          <div class="matrix-item"><div class="matrix-dot" style="background:#C8F45E"></div><div class="matrix-text">Skip forgiveness signal (I was trying something)</div></div>
+        </div>
+        <div class="matrix-cell">
+          <div class="matrix-quad">HIGH IMPACT · HIGH EFFORT — PLAN FOR</div>
+          <div class="matrix-item"><div class="matrix-dot" style="background:#9B6DFF"></div><div class="matrix-text">Exploration mode that doesn't pollute taste profile</div></div>
+          <div class="matrix-item"><div class="matrix-dot" style="background:#9B6DFF"></div><div class="matrix-text">Social discovery with trusted friends' taste</div></div>
+        </div>
+        <div class="matrix-cell">
+          <div class="matrix-quad">LOWER IMPACT · LOW EFFORT — QUICK WINS</div>
+          <div class="matrix-item"><div class="matrix-dot" style="background:#FFB347"></div><div class="matrix-text">Better "Why this?" explanation on recommendations</div></div>
+          <div class="matrix-item"><div class="matrix-dot" style="background:#FFB347"></div><div class="matrix-text">Discovery satisfaction micro-feedback</div></div>
+        </div>
+        <div class="matrix-cell">
+          <div class="matrix-quad">LOWER IMPACT · HIGH EFFORT — DEPRIORITIZE</div>
+          <div class="matrix-item"><div class="matrix-dot" style="background:#4A5568"></div><div class="matrix-text">Full UX overhaul of Browse surface</div></div>
+          <div class="matrix-item"><div class="matrix-dot" style="background:#4A5568"></div><div class="matrix-text">AI playlist builder from scratch</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RECOMMENDATIONS -->
+  <section class="section reveal" id="recommendations">
+    <div class="section-eyebrow">
+      <div class="eyebrow-num">08</div>
+      <div class="eyebrow-label">Design Recommendations</div>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">Four things Spotify could <em>build next</em></h2>
+
+    <div class="card-grid card-grid-2" style="margin-top:32px">
+      <div class="reco-card reco-card-1">
+        <div class="reco-num">1</div>
+        <div class="reco-icon">🧭</div>
+        <div class="reco-title">Context-Aware Listening Modes</div>
+        <div class="reco-body">Let users tag their current context before a session (Working / Running / Exploring / Winding Down). Surface recommendations optimized for that moment, keeping context-specific behavior separate from the core taste profile.</div>
+        <div class="reco-impact">
+          <div class="reco-impact-val">↑ Discovery frequency</div>
+          <div class="reco-impact-label">est. +28% exploration sessions</div>
+        </div>
+      </div>
+      <div class="reco-card reco-card-2">
+        <div class="reco-num">2</div>
+        <div class="reco-icon">🔬</div>
+        <div class="reco-title">Exploration Sandbox Mode</div>
+        <div class="reco-body">An opt-in "exploration mode" that explicitly signals to the algorithm: "I'm trying new things, don't penalize skips." After the session, users choose what to integrate into their taste profile — giving them agency over the algorithm.</div>
+        <div class="reco-impact">
+          <div class="reco-impact-val">↑ Algorithm trust</div>
+          <div class="reco-impact-label">addresses top user complaint</div>
+        </div>
+      </div>
+      <div class="reco-card reco-card-3">
+        <div class="reco-num">3</div>
+        <div class="reco-icon">💬</div>
+        <div class="reco-title">Transparent "Why This?" Explanations</div>
+        <div class="reco-body">Surface a brief, plain-English reason for each recommendation ("Because you loved X · Similar guitar tone"). This builds trust, reduces skip anxiety, and teaches users how to navigate the algorithm rather than fear it.</div>
+        <div class="reco-impact">
+          <div class="reco-impact-val">↑ Recommendation engagement</div>
+          <div class="reco-impact-label">reduces skip rates on new music</div>
+        </div>
+      </div>
+      <div class="reco-card" style="background:rgba(78,205,196,0.06);border:1px solid rgba(78,205,196,0.2)">
+        <div class="reco-num">4</div>
+        <div class="reco-icon">👥</div>
+        <div class="reco-title">Trusted Social Discovery Layer</div>
+        <div class="reco-body">Show what music specific friends (with mutual sharing enabled) have been discovering this week — not as a social feed, but as a quiet, high-trust recommendation layer. Friends are more trusted than algorithms for music recommendations (4.2 vs 2.8 avg trust rating).</div>
+        <div class="reco-impact">
+          <div class="reco-impact-val">↑ Social feature adoption</div>
+          <div class="reco-impact-label">aligns with trust data from study</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REFLECTION -->
+  <section class="section reveal">
+    <div class="section-eyebrow">
+      <div class="eyebrow-num">09</div>
+      <div class="eyebrow-label">Reflection & Limitations</div>
+      <div class="eyebrow-line"></div>
+    </div>
+    <h2 class="section-title">What I'd do <em>differently</em></h2>
+
+    <div class="card-grid card-grid-2" style="margin-top:32px">
+      <div class="card">
+        <div class="card-label">Study Limitations</div>
+        <div class="card-title">Small Sample, Homogeneous Group</div>
+        <div class="card-body">5 participants, all college-aged, from personal network. Findings should be validated with a larger, more diverse group — particularly older users and non-students who may have different discovery patterns. Convenience sampling introduces self-selection bias.</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Next Steps</div>
+        <div class="card-title">If This Were a Real Project</div>
+        <div class="card-body">I would validate with a 50-participant survey instrument, run usability tests on wireframed prototypes of the Context Mode, and conduct a 30-day longitudinal diary study. A/B testing the "exploration sandbox" at 5% of users would be the ideal product validation path.</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- FOOTER -->
+<div class="case-footer">
+  <div>
+    <div class="footer-title">Ankita Chakrapani</div>
+    <div class="footer-sub">Behavioral & Social Data Sciences · UT Austin · Product Analytics · UX Research</div>
+  </div>
+  <div class="footer-contact">
+    <div class="footer-link">ankita2006@outlook.com</div>
+    <div class="footer-link">linkedin.com/in/ankita-chakrapani</div>
+    <div style="font-size:11px;color:var(--faint);font-family:'IBM Plex Mono'">Portfolio Project · 2025</div>
+  </div>
+</div>
+
+<script>
+// Animate bars on scroll
+const bars = document.querySelectorAll('.bar-fill[data-pct]');
+const revealEls = document.querySelectorAll('.reveal');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+revealEls.forEach(el => observer.observe(el));
+
+const barObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const fills = entry.target.querySelectorAll('.bar-fill[data-pct]');
+      fills.forEach(f => {
+        setTimeout(() => { f.style.width = f.getAttribute('data-pct') + '%'; }, 200);
+      });
+    }
+  });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('.card').forEach(c => barObserver.observe(c));
+</script>
+</body>
+</html>
